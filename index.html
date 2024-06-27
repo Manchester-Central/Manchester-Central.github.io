@@ -1,103 +1,67 @@
+<template id="page_body">
+<!-- BEGIN EDITABLE -->
+	<!-- Header -->
+	<header id="header">
+		<a href="/index.html" class="logo"><strong>The Library</strong> by 131 Chaos</a>
+	</header>
+	
+	<!-- Content -->
+	<section>
+		<p>The library is a repository of information and techniques that are used in robotics, explained in a step by step "lesson plan" style.</p>
+
+		<ul>
+			<li><a href="/library/math/">Math: General</a></li>
+			<p>Contains early high school mathematics topics. Only touches on the topics that relate to robotics.</p>
+			<li><a href="/library/math2/">Math: Intermediate</a></li>
+			<p>The next step, applied mathematics at a high school level. Should be manageable by the upper class.</p>
+			<li><a href="/library/math3/">Math: Advanced</a></li>
+			<p>Material taught in college. Topics are still walked through step by step, but require a strong understanding of all prior material.</p>
+
+			<li><a href="/library/swerve-drive/">Swerve Drive</a></li>
+			<li><a href="/library/dynamic-crop/">Procedural Crop w/ Limelight</a></li>
+			<li><a href="/library/launcher-models/">Launcher Models</a></li>
+			<li><a href="#">Robot Localization</a></li>
+			<li><a href="#">Transfer Alignment</a></li>
+			<li><a href="#">Autonomous Pathing</a></li>
+		</ul>
+	</section>
+<!-- END EDITABLE -->
+</template>
+
 <!DOCTYPE HTML>
 <html>
 	<head>
-		<title>Chaos 131</title>
+		<title>Generic - Editorial by HTML5 UP</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<link rel="stylesheet" href="/assets/css/main.css" />
-	</head>
-	<body class="is-preload">
-
-		<!-- Wrapper -->
-		<div id="wrapper">
-
-			<!-- Main -->
-			<div id="main">
-				<div class="inner">
-
-					<!-- Header -->
-					<header id="header">
-						<a href="/index.html" class="logo"><strong>131 Chaos Robotics</strong></a>
-					</header>
-
-					<!-- Banner -->
-					<section id="banner">
-						<div class="content">
-							<header>
-								<h1><a href="/about_us/">Welcome to Chaos</a></h1>
-								<p>Snazzy Tag Line Here</p>
-							</header>
-							<p>Lorem Ipsum</p>
-						</div>
-						<span class="image object">
-							<img src="/images/logo.png" alt="" />
-						</span>
-					</section>
-				</div>
-			</div>
-
-			<!-- Sidebar -->
-			<div id="sidebar">
-				<div class="inner">
-
-					<!-- Menu -->
-					<nav id="menu">
-						<header class="major">
-							<h2>Navigation</h2>
-						</header>
-						<ul>
-							<li><a href="/">Homepage</a></li>
-							<li><a href="/about_us/">About Chaos</a></li>
-							<li>
-								<span class="opener">Library Topics</span>
-								<ul>
-									<li><a href="/library/">About</a></li>
-									<li><a href="/library/math/">Math: General</a></li>
-									<li><a href="/library/math2/">Math: Intermediate</a></li>
-									<li><a href="#">Math: Advanced</a></li>
-									<li><a href="/library/swerve-drive/">Swerve Drive</a></li>
-									<li><a href="/library/dynamic-crop/">Procedural Crop w/ Limelight</a></li>
-									<li><a href="/library/launcher-models/">Launcher Models</a></li>
-									<li><a href="#">Robot Localization</a></li>
-									<li>Transfer Alignment</li>
-									<li>Autonomous Pathing</li>
-								</ul>
-							</li>
-							<li>
-								<span class="opener">Robots</span>
-								<ul>
-									<li><a href="#">2024</a></li>
-									<li><a href="#">2022</a></li>
-								</ul>
-							</li>
-						</ul>
-					</nav>
-
-					<!-- Section -->
-					<section>
-						<header class="major">
-							<h2>Get in touch</h2>
-						</header>
-						<ul class="contact">
-							<li class="icon solid fa-envelope"><a href="#">information@untitled.tld</a></li>
-							<!--<li class="icon solid fa-phone">(000) 000-0000</li>-->
-							<!--<li class="icon solid fa-home">1234 Somewhere Road #8254 Nashville, TN 00000-0000</li>-->
-						</ul>
-					</section>
-
-					<!-- Footer -->
-					<footer id="footer">
-						
-					</footer>
-				</div>
-			</div>
-		</div>
-
-		<!-- Scripts -->
 		<script src="/assets/js/jquery.min.js"></script>
 		<script src="/assets/js/browser.min.js"></script>
 		<script src="/assets/js/breakpoints.min.js"></script>
-		<script src="/assets/js/util.js"></script>
-		<script src="/assets/js/main.js"></script>
+		<script>
+			window.onload = function() {
+				fetch('/template.html')
+					.then(response => response.text())
+					.then(data => document.body.innerHTML = data)
+					.then(vals => {
+						document.getElementById("main").children[0].appendChild(
+							document.importNode(document.getElementById("page_body").content, true));
+
+						var scripts_to_load = [
+							"/assets/js/util.js",
+							"/assets/js/main.js"
+						];
+
+						scripts_to_load.forEach((script_url) => {
+							var script1 = document.createElement("script");
+							script1.setAttribute("src", script_url);
+							script1.setAttribute("type", "text/javascript");
+							document.body.appendChild(script1);
+						});
+					})
+			};
+		</script>
+	</head>
+	<body class="is-preload">
 	</body>
 </html>
