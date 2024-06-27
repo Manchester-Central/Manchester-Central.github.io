@@ -1,0 +1,80 @@
+<template id="page_body">
+	<!-- BEGIN EDITABLE -->
+	<!-- Header -->
+	<header id="header">
+		<strong>Swerve Drive</strong> last updated July 2024
+	</header>
+
+	<!-- Content -->
+	<section>
+		<h3>Introduction</h3>
+
+		<p>
+			Lorem Ipsum
+		</p>
+	</section>
+
+	<section>
+		<h3>Translational Movement</h3>
+	</section>
+
+	<section>
+		<h3>Rotational Movement</h3>
+	</section>
+
+	<section>
+		<h3>Combined Movement</h3>
+	</section>
+
+	<section>
+		<h3>In Practice</h3>
+	</section>
+
+	<section>
+		<h3>Motors</h3>
+	</section>
+	<!-- END EDITABLE -->
+</template>
+
+<!DOCTYPE HTML>
+<html>
+
+<head>
+	<title>Generic - Editorial by HTML5 UP</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<link rel="stylesheet" href="/assets/css/main.css" />
+	<script src="/assets/js/jquery.min.js"></script>
+	<script src="/assets/js/browser.min.js"></script>
+	<script src="/assets/js/breakpoints.min.js"></script>
+	<script>
+		window.onload = function () {
+			fetch('/template.html')
+				.then(response => response.text())
+				.then(data => document.body.innerHTML = data)
+				.then(vals => {
+					document.getElementById("main").children[0].appendChild(
+						document.importNode(document.getElementById("page_body").content, true));
+
+					var scripts_to_load = [
+						"/assets/js/util.js",
+						"/assets/js/main.js"
+					];
+
+					scripts_to_load.forEach((script_url) => {
+						var script1 = document.createElement("script");
+						script1.setAttribute("src", script_url);
+						script1.setAttribute("type", "text/javascript");
+						document.body.appendChild(script1);
+					});
+
+					// TODO: Table of Contents check?
+				})
+		};
+	</script>
+</head>
+
+<body class="is-preload">
+</body>
+
+</html>
