@@ -21,7 +21,7 @@
 
 
 	<section>
-		<h3>Geometry</h3>
+		<h3><a id="Geometry">Geometry</a></h3>
 
 		<p>
 			Geometry is so critical to everything we do. Spatial reasoning, mechanical
@@ -130,7 +130,7 @@
 	</section>
 
 	<section>
-		<h3>Vectors</h3>
+		<h3><a id="Vectors">Vectors</a></h3>
 
 		<p>
 			A vector is an organized set of values. Each position represents a specific dimension, or aspect of the data.
@@ -138,19 +138,14 @@
 			run.
 			This is calculated from y<sub>2</sub>-y<sub>1</sub> and x<sub>2</sub>-x<sub>1</sub>, right? This also just
 			so
-			happens to describe a vector, as seen below.
+			happens to describe a vector, seen here <math display="inline">
+				<mfenced open="{" close="}" separators=",">
+					<mi>&Delta;x</mi>
+					<mi>&Delta;y</mi>
+				</mfenced>
+			</math>.
 		</p>
 
-		<code>
-$$
-\left \\{
-\begin{array}{l}
-\Delta x \\
-\Delta y
-\end{array}
-\right \\}
-$$
-</code>
 
 		<p>
 			This extends into as many dimensions as you like. Including by 1 dimensional vectors (also called scalars),
@@ -205,7 +200,7 @@ $$
 		</p>
 
 		<p>
-			For a moment, take another glance at both the $moving$ and $actual$ vectors above. They have different x
+			For a moment, take another glance at both the <i>moving</i> and <i>actual</i> vectors above. They have different x
 			values, but still have the same length: &radic;(2). This is because vectors of any number of dimensions
 			all obey pythagoras theorem: a<sup>2</sup>+b<sup>2</sup>=c<sup>2</sup>, or <i>hypotenuse</i> =
 			&radic;(a<sup>2</sup>+b<sup>2</sup>). For vectors of 1 dimension, the magnitude is itself. For vectors
@@ -244,38 +239,14 @@ $$
 <html>
 
 <head>
-	<title>Generic - Editorial by HTML5 UP</title>
+	<title></title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="/assets/css/main.css" />
 	<script src="/assets/js/jquery.min.js"></script>
 	<script src="/assets/js/browser.min.js"></script>
 	<script src="/assets/js/breakpoints.min.js"></script>
-	<script>
-		window.onload = function () {
-			fetch('/template.html')
-				.then(response => response.text())
-				.then(data => document.body.innerHTML = data)
-				.then(vals => {
-					document.getElementById("main").children[0].appendChild(
-						document.importNode(document.getElementById("page_body").content, true));
-
-					var scripts_to_load = [
-						"/assets/js/util.js",
-						"/assets/js/main.js"
-					];
-
-					scripts_to_load.forEach((script_url) => {
-						var script1 = document.createElement("script");
-						script1.setAttribute("src", script_url);
-						script1.setAttribute("type", "text/javascript");
-						document.body.appendChild(script1);
-					});
-
-					// TODO: Table of Contents check?
-				})
-		};
-	</script>
+	<script src="/assets/js/template.js"></script>
 </head>
 
 <body class="is-preload">

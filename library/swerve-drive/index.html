@@ -40,38 +40,14 @@
 <html>
 
 <head>
-	<title>Generic - Editorial by HTML5 UP</title>
+	<title>The Library</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<link rel="stylesheet" href="/assets/css/main.css" />
 	<script src="/assets/js/jquery.min.js"></script>
 	<script src="/assets/js/browser.min.js"></script>
 	<script src="/assets/js/breakpoints.min.js"></script>
-	<script>
-		window.onload = function () {
-			fetch('/template.html')
-				.then(response => response.text())
-				.then(data => document.body.innerHTML = data)
-				.then(vals => {
-					document.getElementById("main").children[0].appendChild(
-						document.importNode(document.getElementById("page_body").content, true));
-
-					var scripts_to_load = [
-						"/assets/js/util.js",
-						"/assets/js/main.js"
-					];
-
-					scripts_to_load.forEach((script_url) => {
-						var script1 = document.createElement("script");
-						script1.setAttribute("src", script_url);
-						script1.setAttribute("type", "text/javascript");
-						document.body.appendChild(script1);
-					});
-
-					// TODO: Table of Contents check?
-				})
-		};
-	</script>
+	<script src="/assets/js/template.js"></script>
 </head>
 
 <body class="is-preload">
