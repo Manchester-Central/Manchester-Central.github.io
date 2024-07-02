@@ -1,0 +1,821 @@
+<template id="page_body">
+	<!-- BEGIN EDITABLE -->
+	<script type="module">
+		import * as THREE from 'three';
+		import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+		import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+		import { Line2 } from 'three/addons/lines/Line2.js';
+		import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
+		import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
+
+		let WIDTH = 600;
+		let HEIGHT = 400;
+		let ASPECT = WIDTH/HEIGHT;
+		let NUM_STEPS = 1000;
+		let STEP_SIZE = 0.01;
+		var GRAVITY = new THREE.Vector3(0,0,-9.81);
+		var DESIRED_ANGLE = 50.0*(Math.PI/180.0);
+
+		// Converts an objects origin to screen space coordinates
+		function worldVectorToScreenSpace(obj,camera,width,height) {
+			var vector = new THREE.Vector3();
+			vector.setFromMatrixPosition( obj.matrixWorld );
+			var widthHalf = (width/2);
+			var heightHalf = (height/2);
+			vector.project(camera);
+			vector.x = ( vector.x * widthHalf ) + widthHalf;
+			vector.y = - ( vector.y * heightHalf ) + heightHalf;
+			return vector;
+		};
+
+		// Makes a line following the projectile's path
+		function makeTrajectory(initial_vector, initial_point, acceleration) {
+			var current_vector = initial_vector.clone();
+			var current_point = initial_point.clone();
+			var acceleration_step = acceleration.clone().multiplyScalar(STEP_SIZE);
+			var points = [];
+			points.push(current_point.clone());
+			for (var i = 0; i < NUM_STEPS; i++) {
+				current_point.add(current_vector.clone().multiplyScalar(STEP_SIZE));
+				current_vector.add(acceleration_step);
+				points.push(current_point.clone());
+			}
+			return points;
+		}
+
+		// Sums all of the vectors together piece wise.
+		function combineVectors(list_of_vectors) {
+			if (list_of_vectors.length == 0) return new THREE.Vector3();
+			var vec = list_of_vectors[0].clone();
+			for (var i = 1; i < list_of_vectors.length; i++) {
+				vec.add(list_of_vectors[i]);
+			}
+			return vec;
+		}
+
+		function flattenVectorsToArray(list_of_vectors) {
+			var points = [];
+			for (var i = 0; i < list_of_vectors.length; i++) {
+				points.push(list_of_vectors[i].x);
+				points.push(list_of_vectors[i].y);
+				points.push(list_of_vectors[i].z);
+			}
+			return points;
+		}
+
+		function makeThickLine(list_of_points, line_color) {
+			var points = flattenVectorsToArray(list_of_points);
+			var geometry = new LineGeometry();
+			geometry.setPositions( points );
+			var material = new LineMaterial( { color: line_color, linewidth: 2 } );
+			material.resolution.set( window.innerWidth, window.innerHeight );
+			var l = new Line2( geometry, material );
+			return l;
+		}
+
+		function collectVec3s(input_id) {
+			var elemx = document.getElementById("positionx"+input_id);
+			var elemy = document.getElementById("positiony"+input_id);
+			var pos = new THREE.Vector3(parseFloat(elemx.value), parseFloat(elemy.value), 0);
+			elemx = document.getElementById("velocityx"+input_id);
+			elemy = document.getElementById("velocityy"+input_id);
+			var vel = new THREE.Vector3(parseFloat(elemx.value), parseFloat(elemy.value), 0);
+			// We may not have some elements
+			var target_elem = document.getElementById("targetspotx"+input_id);
+			var tar = new THREE.Vector3();
+			// if(target_elem) {
+			// 	tar.setComponent(0, parseFloat(document.getElementById("targetspotx"+input_id).value));
+			// 	tar.setComponent(1, parseFloat(document.getElementById("targetspoty"+input_id).value));
+			// }
+			return [pos, vel];
+		}
+
+		// The real meat and potatoes
+		function calculateVectorVelocityAtHeight(current_position, target_position, current_velocity, target_state) {
+			// Calculate velocity needed to reach a target height and speed along the span
+			var end_velocity = document.getElementById(target_state[0]).value;
+			document.getElementById(target_state+"val").innerText = end_velocity;
+			var v0 = Math.sqrt(end_velocity * end_velocity - 2 * GRAVITY.z * (target_position.z - current_position.z));
+			var t = (end_velocity - v0) / GRAVITY.z;
+
+			var ground_vector = target_position.clone().sub(current_position);
+			ground_vector.setComponent(2, 0); // Sets the Z component (index 2) to 0
+			ground_vector.divideScalar(t).sub(current_velocity);
+			ground_vector.setComponent(2, v0);
+
+			return ground_vector;
+		}
+
+		function calculateLandingArc(current_position, target_position, current_velocity, target_state) {
+			var [elemx, elemy] = target_state;
+			var ground_vector = target_position.clone().sub(current_position);
+			ground_vector.setComponent(2, 0);
+			var final = new THREE.Vector3();
+			var d = ground_vector.length();
+			var h = target_position.z - current_position.z;
+			var x_hat = Math.sqrt( (9.81/2*d*d) / (Math.sin(DESIRED_ANGLE)/Math.cos(DESIRED_ANGLE)*d - h) )
+			ground_vector = ground_vector.divideScalar(d).multiplyScalar(x_hat);
+
+			var y_hat = x_hat * Math.sin(DESIRED_ANGLE)/Math.cos(DESIRED_ANGLE);
+
+			var final = ground_vector.clone();
+			final.setComponent(2, y_hat).sub(current_velocity);
+
+			return final
+		}
+
+		function updateLineWithPoints(line, list_of_vec3) {
+			line.geometry.dispose();
+			var points = flattenVectorsToArray(list_of_vec3);
+			var geometry = new LineGeometry();
+			geometry.setPositions( points );
+			line.geometry = geometry;
+		}
+
+		setupDemo("velo-at-height", calculateVectorVelocityAtHeight, ["targetvelocity1", ], new THREE.Vector3(0,4,2), "1");
+		setupDemo("landing-arc", calculateLandingArc, ["targetspotx2", "targetspoty2"], new THREE.Vector3(0,0,0), "2")
+
+		function setupDemo(container_name, fnc, user_var, target_pos, formid) {
+			var scene, controls, bounds;
+			var tags = [];
+
+			var current_position = new THREE.Vector3(4,3,0);
+			var target_position = target_pos;
+			var tar = new THREE.Vector3();
+			var current_velocity = new THREE.Vector3(2,2,0);
+			[current_position, current_velocity] = collectVec3s(formid);
+
+			var velocity_obj = makeThickLine(
+					[current_position.clone(), current_position.clone().add(current_velocity)],
+					0xff0000);
+			var target_obj = makeThickLine(
+					[current_position.clone(), target_position.clone()],
+					0x00ff00);
+			var aim_vector = fnc(current_position, target_position, current_velocity, user_var);
+			var aim_obj = makeThickLine(
+					[current_position.clone(), current_position.clone().add(aim_vector)],
+					0x0000ff);
+			var trajectory_arc_obj = makeThickLine(makeTrajectory(combineVectors([current_velocity.clone(), aim_vector]),
+					current_position, GRAVITY), 0xff00ff);
+
+			// setup //
+			const renderer = new THREE.WebGLRenderer({ alpha: true });
+			renderer.setSize(WIDTH, HEIGHT);
+			var demo_container = document.getElementById(container_name);
+			demo_container.appendChild(renderer.domElement);
+
+			scene = new THREE.Scene();
+			renderer.setPixelRatio(window.devicePixelRatio);
+			renderer.setSize(WIDTH, HEIGHT);
+			const camera = new THREE.PerspectiveCamera( 45, WIDTH / HEIGHT, 1, 10000 );
+
+			camera.up.set(0, 0, 1);
+			camera.position.set(15, 2, 5);
+			controls = new OrbitControls(camera, renderer.domElement);
+			controls.update();
+			renderer.render(scene, camera);
+
+			/// lighting ///
+			const light = new THREE.AmbientLight(0xffaaff);
+			light.position.set(10, 10, 10);
+			scene.add(light);
+
+			/// geometry ///
+			const axesHelper = new THREE.AxesHelper( 5 );
+			scene.add( axesHelper );
+
+			animate();
+
+			scene.add(velocity_obj);
+			scene.add(target_obj);
+			scene.add(aim_obj);
+			scene.add(trajectory_arc_obj);
+
+			function animate() {
+				requestAnimationFrame(animate);
+				[current_position, current_velocity] = collectVec3s(formid);
+				updateLineWithPoints(velocity_obj,
+					[current_position.clone(), current_position.clone().add(current_velocity)]);
+				updateLineWithPoints(target_obj, [current_position.clone(), target_position.clone()]);
+				aim_vector = fnc(current_position, target_position, current_velocity, user_var);
+				updateLineWithPoints(aim_obj, [current_position.clone(), current_position.clone().add(aim_vector)]);
+				updateLineWithPoints(trajectory_arc_obj,
+					makeTrajectory(combineVectors([current_velocity.clone(), aim_vector]), current_position, GRAVITY));
+				renderer.render(scene, camera);
+			}
+		}
+	</script>
+	<!-- Header -->
+	<header id="header">
+		<strong>Launcher Models</strong> last updated July 2024
+	</header>
+
+	<!-- Content -->
+	<section>
+		<h3>Introduction</h3>
+
+		<p>
+			A common theme in First Robotics is to launch game pieces into openings. This is one
+			of those things that's easier said than done, and requires precise alignment and
+			positioning, and a strong understanding of physics to solve.
+		</p>
+	</section>
+
+
+	<section>
+		<h3><a id="VectorAdd">Relative Motion: Vector Addition</a></h3>
+
+		<p>
+			There are many reference frames to use when talking about movement, but picking a
+			specific reference frame and staying consistent (and being able to swap between them)
+			is important for advanced robotics, rocket science, and a whole lot more.
+		</p>
+
+		<p>
+			You can sit on a train, playing with marbles on a table top, and what you perceive as a
+			marble moving 1 meter per second away from you, is in fact a marble moving 1 meter per
+			second faster than a train. This scales up into 3 dimensions cleanly, and a marble moving
+			away from you and to the left at 1.2 meters per second is also moving forward and left more
+			than the train is. This can be represented as something called Vector Addition.
+		</p>
+
+		<p>
+			There's a video from the show Mythbusters that
+			<a href="https://www.youtube.com/watch?v=BLuI118nhzc">illustrates</a> this decently well.
+			Bonus points if you recognize what Kari Byron yells out. They are trying to see if they
+			released a ball backwards at the same speed as the vehicle it's on is moving, will it stay
+			stationary relative to the ground the truck is driving over? You see, these are two different
+			reference frames, one is with respect to the truck, and the other is respect to the ground. No
+			matter how you setup your equation, the terms should cancel out, and the relative ground speed
+			between asphalt and the ball is 0.
+		</p>
+		<p>
+			That's a really trivial case though, what happens in the more <i>real world</i> environments?
+			Well, the same thing really. Instead of adding single values together, you add multiple ones.
+			See the diagram below, and observe that the x and y values are both going through the same thing.
+		</p>
+
+		<p style="text-align: center;">
+			<img src="vectors.png" alt="Vector Image Not Found." title="Pull out a ruler and try it yourself!" /> <br />
+
+			Seen here as: <i>actual = aim+moving</i>
+		</p>
+
+		<p>
+			If you were to take the <i>moving</i> vector and add it to the <i>aim</i> vector, you would get the
+			<i>actual</i> vector. You can line this up visually and take the tail of the <i>moving</i> vector
+			(side without the arrow) and place it over the tip of the <i>aim</i> vector (side with the arrow tip),
+			and see how the tip of the <i>moving</i> vector touches the tip of the <i>actual</i> vector. This is a
+			core concept of Linear Algebra, and also a (very) basic building block of another important topic called
+			transfer alignment. More formally, this can be written as:
+		</p>
+
+		<p style="text-align: center;">
+			<math>
+				<msub><mi>v</mi><mi>final</mi></msub>
+				<mo>=</mo>
+				<munderover>
+					<mo>&Sigma;</mo>
+					<mrow><mi>i</mi></mrow>
+					<mrow></mrow>
+				</munderover>
+				<msub><mi>v</mi><mi>i</mi></msub>
+			</math>
+		</p>
+
+		<p>
+			The final vector is equal to the sum of each vector in a sequence. The capital Sigma stands for sum over
+			a series. Kinda simple, right?
+		</p>
+	</section>
+
+
+	<section>
+		<h3><a id="Kinematics">Kinematic Equations</a></h3>
+
+		<p>
+			Linear algebra and vectors are cool and all, but what happens after the piece is up in the air
+			in free fall? It experiences a different type of motion called a parabolic trajectory. These can be
+			calculated with a series of equations listed below:
+		</p>
+
+		
+		<math>
+			\Delta x &= (\frac{v_f+v_0}{2})t \\
+			\Delta x &= v_0t + \frac{1}{2}at^2 \\
+			v_f^2 &= v_0^2 + 2a \Delta x \\
+				v_f &= v_0 + at
+		</math>
+		<p style="text-align: center;">
+			<math display="block" style="math-style: normal;">
+				<mtable>
+					<mtr>
+						<mtd><mi>&Delta; x</mi></mtd>
+						<mtd><mo>=</mo></mtd>
+						<mtd>
+							<mfrac>
+								<mrow>
+									<msub><mi>v</mi><mn>f</mn></msub>
+									<mo>+</mo>
+									<msub><mi>v</mi><mn>0</mn></msub>
+								</mrow>
+								<mrow>
+									<mn>2</mn>
+								</mrow>
+							</mfrac>
+							<mi>t</mi>
+						</mtd>
+					</mtr>
+
+					<mtr>
+						<mtd><mi>&Delta; x</mi></mtd>
+						<mtd><mo>=</mo></mtd>
+						<mtd>
+							<msub><mi>v</mi><mn>0</mn></msub>
+							<mi>t</mi>
+							<mo>+</mo>
+							<mfrac>
+								<mrow>
+									<mn>1</mn>
+								</mrow>
+								<mrow>
+									<mn>2</mn>
+								</mrow>
+							</mfrac>
+							<mi>a</mi>
+							<msup><mi>t</mi><mn>2</mn></msup>
+						</mtd>
+					</mtr>
+
+					<mtr>
+						<mtd><msup><msub><mi>v</mi><mn>f</mn></msub><mn>2</mn></msup></mtd>
+						<mtd><mo>=</mo></mtd>
+						<mtd>
+							<msup><msub><mi>v</mi><mn>0</mn></msub><mn>2</mn></msup>
+							<mo>+</mo>
+							<mn>2</mn>
+							<mi>a</mi>
+							<mn>&Delta; x</mn>
+						</mtd>
+					</mtr>
+
+					<mtr>
+						<mtd><msub><mi>v</mi><mn>f</mn></msub></mtd>
+						<mtd><mo>=</mo></mtd>
+						<mtd>
+							<msub><mi>v</mi><mn>0</mn></msub>
+							<mo>+</mo>
+							<mn>a</mn>
+							<mi>t</mi>
+						</mtd>
+					</mtr>
+				</mtable>
+			</math>
+		</p>
+
+		<p>
+			Some of these are quite linear, by being able to drop larger polynomial terms we get equations
+			like the last one. These are very powerful when used efficiently. They can also be used in pieces,
+			solving for one thing, then swapping to another to leverage that intermediate value. Or they can be
+			combined into a systems of equations to derive the intersection of two aspects.
+		</p>
+
+		<p>
+			For instance, you can calculate the time in the air given a launch vector by using
+			<math><msub><mi>v</mi><mi>f</mi></msub><mo>=</mo><msub><mi>v</mi><mi>0</mi></msub><mi>+at</mi></math>,
+			pair it with
+			<math><mi>&Delta; x</mi><mo>=</mo>
+				<mfrac>
+					<mrow>
+						<msub><mi>v</mi><mn>f</mn></msub>
+						<mo>+</mo>
+						<msub><mi>v</mi><mn>0</mn></msub>
+					</mrow>
+					<mrow>
+						<mn>2</mn>
+					</mrow>
+				</mfrac>
+				<mi>t</mi>
+			</math>
+			for the first half of an arc, then solve for the second half with
+			<math><mi>&Delta; x</mi><mo>=</mo>
+				<msub><mi>v</mi><mn>0</mn></msub>
+				<mi>t</mi>
+				<mo>+</mo>
+				<mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac>
+				<mi>a</mi>
+				<msup><mi>t</mi><mn>2</mn></msup>
+			</math>.
+			Solving it this way also cancels out many terms in the process. You can also substitute the equations
+			into eachother to derive new ones, however that frequently just derives one of the others. Maybe you
+			don't have v<sub>0</sub> but you do have v<sub>f</sub>. You can turn the second equation into
+			<math><mi>&Delta; x</mi><mo>=</mo>
+				<msub><mi>v</mi><mn>f</mn></msub><mi>t</mi>
+				<mo>-</mo>
+				<mfrac><mrow><mn>1</mn></mrow><mrow><mn>2</mn></mrow></mfrac>
+				<mi>a</mi><msup><mi>t</mi><mn>2</mn></msup>
+			</math>.
+			Maybe that's more useful to you, or maybe it's not, but that's the power of algebra!
+		</p>
+	</section>
+
+
+	<section>
+		<h3><a id="SolveFor">What To Solve For?</a></h3>
+
+		<p>
+			If you're thinking ahead, you can typically reduce the problems to a lower dimension,
+			or solve for a specific case. If you notice above, some equations cancel one term or
+			another out. For instance, notice how the first kinematic equation listed doesn't include
+			an acceleration? How about the last one not having a distance variable? This is powerful,
+			because it allows you to setup solutions to specific problems.
+		</p>
+	</section>
+
+	<section>
+		<h3><a id="VelAtHeight">Vertical Velocity At A Height</a></h3>
+
+		<p>
+			One thing you might want to accomplish is launching at a higher target, and guaranteeing
+			a certain velocity at a desired height creates constraints that can make the calculations
+			simpler. Lets take a trip and break down all of this step by step.
+		</p>
+
+		<p>
+			By focusing on the velocity at a specific height, you can solve for the time to reach that
+			height since that time value plays two parts. (1) It can be passed into other functions to
+			generate more values, and (2) it can convert translational vectors into linear motion vectors.
+			If you look at the list of 4 equations above, none of them quite fit our needs. But we do have
+			the tools to calculate time via another important step in this process. We can calculate our
+			initial vertical velocity based on gravity, and the vertical distance to rise.
+		</p>
+
+		<p style="text-align: center;">
+			<math>
+				<msup><msub><mi>v</mi><mi>f</mi></msub><mn>2</mn></msup>
+				<mo>=</mo>
+				<msup><msub><mi>v</mi><mi>0</mi></msub><mn>2</mn></msup>
+				<mo>+</mo><mi>2a&Delta;x</mi>
+			</math>
+			<br />
+			<math>
+				<msub><mi>v</mi><mi>0</mi></msub>
+				<mo>=</mo>
+				<msqrt>
+					<msup><msub><mi>v</mi><mi>f</mi></msub><mn>2</mn></msup>
+					<mo>-</mo>
+					<mi>2a&Delta;x</mi>
+				</msqrt>
+			</math>
+		</p>
+
+		<p>
+			This can then be used in one of the original equations to calculate the time to that velocity.
+		</p>
+
+		<p style="text-align: center;">
+			<math>
+				<msub><mi>v</mi><mi>f</mi></msub>
+				<mo>=</mo>
+				<msub><mi>v</mi><mi>0</mi></msub>
+				<mo>+</mo><mi>at</mi>
+			</math>
+			<br /> <br />
+			<math>
+				<mi>t</mi>>
+				<mo>=</mo>
+				<mfrac><mrow>
+					<msub><mi>v</mi><mi>f</mi></msub>
+					<mo>-</mo>
+					<msub><mi>v</mi><mi>0</mi></msub>
+				</mrow><mrow>
+					<mi>a</mi>
+				</mrow></mfrac>
+			</math>
+		</p>
+
+		<p>
+			That's great! You now have the vertical velocity component for our 3 dimensional launch vector,
+			<i>AND</i> you know how long it will be in the air. The other terms can be deduced to match the
+			units and context.
+		</p>
+
+		<p>
+			We need to solve the horizontal velocity components now. What's convenient about this technique
+			is that we can calculate the horizontal distance, and convert that into a velocity component to
+			plug into our launch vector. There's one catch, what if our robot is moving while it's launching?
+			Think back to the earlier sections! We only have a parabolic curve in the vertical direction
+			because we don't have any acceleration in the horizontal directions. In other words, when we add
+			our motion vectors together, we get an effective vector, which also means that we can remove one
+			vector from another as well.
+		</p>
+
+		<p>
+			So as you can see below, we take the ground distance, divide it by the time value we found earlier
+			to establish the velocity needed to reach that distance in the correct amount of time. Then we can
+			subtract the robots velocity in the same field coordinates to counteract the influence it will have
+			in reality.
+		</p>
+
+		<p style="text-align: center;">
+			<math>
+				<mi>v</mi><mo>=</mo>
+				<mfrac><mrow><mi>target_position</mi><mo>-</mo><mi>current_position</mi></mrow>
+					<mrow><mn>t</mn></mrow></mfrac>
+				<mo>-</mo>
+				<mi>current_velocity</mi>
+			</math>
+		</p>
+
+		<p>
+			Tada! In just 4 equations, you have calculated a velocity release vector. Below, you can see the
+			equations put together in an interactive demo:
+		</p>
+
+		<div id="velo-at-height" style="border: 1px solid black; width: 600px;"></div>
+		<div id="velo-at-height-inputs">
+			Position X: <input type="range" min="0" max="12" value="7" step="0.1" class="slider" id="positionx1" style="background: #9f9f9f; border-radius: 5px;" />
+			Position Y: <input type="range" min="0" max="12" value="4" step="0.1" class="slider" id="positiony1" style="background: #9f9f9f; border-radius: 5px;" />
+			<br />
+			Velocity X: <input type="range" min="-8" max="8" value="1" step="0.1" class="slider" id="velocityx1" style="background: #9f9f9f; border-radius: 5px;" />
+			Velocity Y: <input type="range" min="-8" max="8" value="1" step="0.1" class="slider" id="velocityy1" style="background: #9f9f9f; border-radius: 5px;" />
+			<br />
+			Target Velocity: <input type="range" min="-15" max="15" value="2" step="0.1" class="slider" id="targetvelocity1" style="background: #9f9f9f; border-radius: 5px;" /><span id="targetvelocity1val"></span>
+		</div>
+
+		<p>
+			One thing that's interesting about this solution is that if you pass a negative velocity target,
+			the calculated release arc will continue over the hill. Move the position and velocity sliders around
+			and mess around with the variables to see how that would affect the release trajectory.
+			Does it all pass the gut check?
+		</p>
+	</section>
+
+
+	<section>
+		<h3><a id="LocationSolve">Location Given An Angle</a></h3>
+
+		<p>
+			Another situation might be launching <i>over</i> something. You aim up high, and figure out the
+			curve that will match the location you want the projectile to land on. While there are lower
+			angles that can produce the desired landing spot, a higher angle is more likely to "stick the
+			landing". Any fixed angle will work, but the larger angle is more likely to be useful.
+		</p>
+
+		<p>
+			So lets assume we're launching at a known max angle, and we know both our height difference,
+			and our ground distance. This means we know the ratio between our vertical and horizontal speeds,
+			and can substitute one for the other. Lets see where this takes us!
+		</p>
+
+		<p>
+			Lets note the important relationship between the X and Y values of v<sub>0</sub>.
+		</p>
+
+		<math display="block" style="math-style: normal;">
+			<mtable>
+				<mtr>
+					<mtd><mi>y</mi></mtd><mtd><mo>=</mo></mtd>
+					<mtd><mo>sin</mo><mi>&theta;</mi><mo>*</mo><msub><mi>v</mi><mn>0</mn></msub></mtd>
+				</mtr>
+				<mtr>
+					<mtd><mi>x</mi></mtd><mtd><mo>=</mo></mtd>
+					<mtd><mo>cos</mo><mi>&theta;</mi><mo>*</mo><msub><mi>v</mi><mn>0</mn></msub></mtd>
+				</mtr>
+				<mtr>
+					<mtd><mi>y</mi></mtd><mtd><mo>=</mo></mtd>
+					<mtd><mfrac>
+						<mrow><mo>sin</mo><mi>&theta;</mi></mrow>
+						<mrow><mo>cos</mo><mi>&theta;</mi></mrow>
+					</mfrac><mi>x</mi></mtd>
+				</mtr>
+			</mtable>
+		</math>
+
+		<p>
+			Our horizontal distance equation is relatively straight forward. The time it takes for the
+			projectile to travel horizontal is just the distance traveled divided by the speed. 
+			<math><mi>t</mi><mo>=</mo><mfrac><mi>d</mi><mi>x</mi></mfrac></math>
+		</p>
+
+		<p>
+			Our vertical and second equation is a little more complex. We can't easily break this problem
+			up into parts like we did before, it just doesn't have a clear and direct path to the answer.
+			So lets see what we can substitute and rearrange to get somewhere nice.
+		</p>
+
+		<math display="block" style="math-style: normal;">
+			<mtable>
+				<mtr>
+					<mtd><mi>&Delta; x</mi></mtd><mtd><mo>=</mo></mtd>
+					<mtd>
+						<msub><mi>v</mi><mn>0</mn></msub><mo>+</mo>
+						<mfrac><mn>1</mn><mn>2</mn></mfrac><msup><mi>at</mi><mn>2</mn></msup>
+					</mtd>
+				</mtr>
+				<mtr>
+					<mtd><mi>h</mi></mtd><mtd><mo>=</mo></mtd>
+					<mtd>
+						<mi>yt</mi><mo>+</mo>
+						<mfrac><mn>1</mn><mn>2</mn></mfrac><msup><mi>at</mi><mn>2</mn></msup>
+					</mtd>
+				</mtr>
+				<mtr>
+					<mtd><mi>y</mi></mtd><mtd><mo>=</mo></mtd>
+					<mtd><mfrac>
+						<mrow><mo>sin</mo><mi>&theta;</mi></mrow>
+						<mrow><mo>cos</mo><mi>&theta;</mi></mrow>
+					</mfrac><mi>x</mi></mtd>
+				</mtr>
+			</mtable>
+		</math>
+
+		<p>
+			Now lets remember that we can substitute something in for y.
+		</p>
+
+		<math display="block" style="math-style: normal;">
+			<mtable>
+				<mtr>
+					<mtd><mi>h</mi></mtd><mtd><mo>=</mo></mtd>
+					<mtd>
+						<mfrac>
+							<mrow><mo>sin</mo><mi>&theta;</mi></mrow>
+							<mrow><mo>cos</mo><mi>&theta;</mi></mrow>
+						</mfrac><mi>x</mi>
+						<mi>t</mi><mo>+</mo>
+						<mfrac><mn>1</mn><mn>2</mn></mfrac><msup><mi>at</mi><mn>2</mn></msup>
+					</mtd>
+				</mtr>
+			</mtable>
+		</math>
+
+		<p>
+			We still have 2 unknown variables still. This sounds like a difficult problem, but
+			it's really not. What else could you substitute in here that would fit our needs? With
+			just one more substitution, you can then simplify and solve for x.
+		</p>
+
+		<p>
+			After solving that, and remembering what we said about vector addition and launching into
+			the speaker while moving, what would you do to to the launch vector so that we could
+			shoot on the move here too?
+		</p>
+
+		<p>
+			This type of problem involves something called systems of equations. We have taken 2 different
+			but tightly coupled equations that may or may not have a solution, and found a solution that
+			fits the intersection of both. Substitution is a very powerful technique that works with simpler
+			scenarios, and luckily this case is just simple enough for it to work.
+		</p>
+
+		<div id="landing-arc" style="border: 1px solid black; width: 600px;"></div>
+		<div id="landing-arc-inputs">
+			Position X: <input type="range" min="0" max="12" value="7" step="0.1" class="slider" id="positionx2" style="background: #9f9f9f; border-radius: 5px;" />
+			Position Y: <input type="range" min="0" max="12" value="4" step="0.1" class="slider" id="positiony2" style="background: #9f9f9f; border-radius: 5px;" />
+			<br />
+			Velocity X: <input type="range" min="-8" max="8" value="1" step="0.1" class="slider" id="velocityx2" style="background: #9f9f9f; border-radius: 5px;" />
+			Velocity Y: <input type="range" min="-8" max="8" value="1" step="0.1" class="slider" id="velocityy2" style="background: #9f9f9f; border-radius: 5px;" />
+			<br />
+			Target Spot X: <input type="range" min="-15" max="15" value="2" step="0.1" class="slider" id="targetspotx2" style="background: #9f9f9f; border-radius: 5px;" /><span id="targetspotx2val"></span>
+			Target Spot Y: <input type="range" min="-15" max="15" value="2" step="0.1" class="slider" id="targetspoty2" style="background: #9f9f9f; border-radius: 5px;" /><span id="targetspoty2val"></span>
+		</div>
+	</section>
+
+	<section>
+		<h3><a id="FullModel">Full Model: Iteration to Convergeance</a></h3>
+
+		<p>
+			One issue with the earlier models is that they work well with classical objects. You know the type,
+			bowling balls and frictionless spherical cows. Once we start to scale things up and add more complex
+			physics (like fluid dynamics, n-body style mechanics, or air resistance), it becomes easier to model
+			the process as a multi-round monte carlo simulation (try it with random values), or a something called
+			a gradiant descent model. For this, we'll use a greedy form of gradient descent.
+		</p>
+
+		<p>
+			Gradient Descent is basically just a measurement of slope, and trying to move "downhill".
+		</p>
+
+		<p style="text-align: center;"><img src="descent.png" alt="2d Gradient Descent" title="" style="width: 400px; height: 400px"/></p>
+
+		<p>
+			Here you can see a 2d example that looks sort of like a bullseye. If you've ever seen a topological or
+			height map (for instance the lines around a mountain peak on a map) you will see the same effect here.
+			The middle ring is the lowest value, and each ring around it is a "higher point" in the data.
+		</p>
+
+		<p>
+			As algorithm designers, we can choose what those values are, and how they related to our problem set.
+			So lets put a little bit of thought into this then! As the projectile travels the length of the arc,
+			we can plot the minimum distance of that curve to the target location. We will make incremental adjustments
+			to get there, and eventually we will get within a tolerance. This is what the name iteration to convergeance
+			means, iterate until the values stop changing a meaningful amount.
+		</p>
+	</section>
+
+	<section>
+		<h3><a id="Remains">What Remains</a></h3>
+
+		<p>
+			Robots typically don't function in terms of velocity vectors. We've figured out how to calculate an arc from
+			1 point to another, but not how to use it in reality. That is a problem that's robot dependent. So lets talk
+			about them at a high level.
+		</p>
+
+		<hr />
+
+		<strong>Transfer Alignment</strong>
+
+		<p>
+			This is the synchronization between a launcher devices's coordinate frame, and the platform's origin. In FRC,
+			we typically don't deal with transfer alignment at the same complexity as professional projects, but the core
+			idea remains. We need to account for the sensor/encoder results, and relate them to the actual position of the
+			launcher mechanism relative to the <i>inertial frame</i> (aka, the robot origin).
+		</p>
+
+		<p style="text-align: center;"><img src="2024robot.png" alt="2024 Robot" title="" width="350" height="300"/></p>
+
+		<p>
+			In Chaos' 2024 robot design, we used 3 vectors and a few rotations to determine the release point as seen with
+			the blue arrows above.
+		</p>
+
+		<p>
+			Each arrow describes some constant distance, or scalable distance, and a potential rotation around that point.
+			If you imagine the lift moving up and down, you will see that middle blue arrow expand and shrink, however the
+			other arrows will remain the same. By calculating each arrow individually, rotating them when necessary, and
+			then adding them all together, you can calculate where the release point is relative to the robot origin at
+			any given point.
+		</p>
+
+		<p>
+			You can see a similar set of calculations done in
+			<a href="https://github.com/Manchester-Central/2024-Crescendo/blob/main/src/main/java/frc/robot/RobotContainer.java#L145C46-L145C62">RobotContainer's constructor</a>,
+			where the rear camera has its offset handler defined. These are almost the same vectors as the one to the
+			launcher's release point.
+		</p>
+
+		<hr />
+
+		<strong>Velocity to Mechanism</strong>
+
+		<p>
+			Motors rarely understand commands to "speed". What they do understand is a command to rotate, or move to
+			position. This is another robot specific problem, but it's usually simple enough to convert RPM to velocity
+			with some error. Trivially, that's just the number of rotations per second, times the circumference of the
+			wheels delivering the force. Unfortunately physics has a nasty habit of complicating things, and there will
+			always be some loss in the conversion.
+		</p>
+
+		<p>
+			Ideally, you would model this with a speed gun. However that's unlikely to be viable.
+		</p>
+
+		<p>
+			The next best way is to fiddle with the RPM value given a velocity, and see what value matches the target
+			velocity. This is more or less how a lookup table (also called flywheel table) functions. The difference
+			is that once that table is generated you can fit an accurate polynomial curve to the points which should be
+			more precise than just a flywheel table.
+		</p>
+
+		<p>
+			Using this equation, you can bake in the loss and estimate the deviation in the model. Every mechanism that's
+			converting energy suffers some loss, and we see loss in our 2024 robot's system by the vibrations in the note,
+			and the skipping along the note's surface. We don't actually get the note to release at 100% conversion rate,
+			but closer to 50%.
+		</p>
+	</section>
+
+
+	<!-- END EDITABLE -->
+</template>
+
+<!DOCTYPE HTML>
+<html>
+
+<head>
+	<title></title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<link rel="stylesheet" href="/assets/css/main.css" />
+	<script src="/assets/js/jquery.min.js"></script>
+	<script src="/assets/js/browser.min.js"></script>
+	<script src="/assets/js/breakpoints.min.js"></script>
+	<link rel="stylesheet" href="/assets/js/highlight/styles/github-dark.css" />
+	<script src="/assets/js/highlight/highlight.js"></script>
+	<script type="importmap">
+		{
+			"imports": {
+				"three": "https://cdn.jsdelivr.net/npm/three@0.166.0/build/three.module.js",
+				"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.166.0/examples/jsm/"
+			}
+		}
+	</script>
+	<script src="/assets/js/template.js"></script>
+</head>
+
+<body class="is-preload">
+</body>
+
+</html>
