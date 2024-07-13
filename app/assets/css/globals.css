@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://fonts.googleapis.com/css?family=Open+Sans:400,600,400italic,600italic|Roboto+Slab:400,700");
+
+body {
+    color: #7f888f;
+    font-family: "Open Sans", sans-serif;
+    font-size: 13pt;
+    font-weight: 400;
+    line-height: 1.65;
+}
+
+p {
+    margin-bottom: 20px;
+}
+
+hr {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+pre {
+    margin: 1em;
+}
+
+.header {
+    border-bottom: solid 5px #E17038;
+    display: flex;
+    margin-bottom: 40px;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.header h1 {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #000;
+}
+
+.subsection {
+    margin-bottom: 50px;
+}
+
+.subsection h2 {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #000;
+    border-bottom: solid 2px #E1703888;
+    margin-bottom: 50px;
+    width: fit-content;
+}
+
+.subsection + .subsection {
+    padding-top: 50px;
+    border-top: solid 2px rgba(210, 215, 217, 0.75);
+}
+
+.sidebar {
+    color: #000;
+    font-size: 0.8em;
+}
+
+.bg-chaos-light-green {
+    background-color: #cbe0d2;
+}
+
+.question {
+    font-weight: bold;
+	text-align: center;
+}
+
+.centered-content {
+    display: flex;
+    justify-content: center;
+}
+
+strong {
+    color: #000;
+}
