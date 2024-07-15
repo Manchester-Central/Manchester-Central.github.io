@@ -111,7 +111,6 @@ export default function UnitCircleDemo() {
 		// Note the coordinate inversion here
 		var new_pt = new THREE.Vector3(left-centerx, centery-top, 0.1).normalize();
 		updateLineWithPoints(radius_obj, [origin.clone(), new_pt.clone()]);
-		if (left-centerx == 0 || centery-top == 0) return;
 		var angle = Math.atan2(centery-top, left-centerx);
 		var cos_x = Math.cos(angle);
 		var cos_pt = new THREE.Vector3(cos_x, 0, 0.1);
