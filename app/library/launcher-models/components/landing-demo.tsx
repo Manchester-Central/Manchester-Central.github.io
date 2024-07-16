@@ -212,7 +212,7 @@ export default function LandingForAngleDemo() {
 										}} />
 					Velocity X: <Slider progress
 										style={{ marginTop: 16 }}
-										min={0}
+										min={-5}
 										value={velX}
 										max={5}
 										step={0.1}
@@ -222,7 +222,7 @@ export default function LandingForAngleDemo() {
 										}} />
 					Velocity Y: <Slider progress
 										style={{ marginTop: 16 }}
-										min={0}
+										min={-5}
 										value={velY}
 										max={5}
 										step={0.1}
