@@ -19,14 +19,6 @@ const sections: DocumentationSection[] = [
     title: "Combined Movement",
     html: <CombinedMovement/>
   },
-  {
-    title: "In Practice",
-    html: <InPractice/>
-  },
-  {
-    title: "Motors",
-    html: <Motors/>
-  },
 ]
 
 export const SwerveDriveMetadata: DocumentationMetadata = {

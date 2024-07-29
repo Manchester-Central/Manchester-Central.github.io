@@ -12,6 +12,10 @@ body {
     line-height: 1.65;
 }
 
+a {
+	color: #E17038;
+}
+
 p {
     margin-bottom: 20px;
 }

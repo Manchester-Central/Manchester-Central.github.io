@@ -7,7 +7,7 @@ export function Vectors() {
 			A vector is an organized set of values. Each position represents a specific dimension,
 			or aspect of the data. For instance, when calculating the slope of a line on a graph,
 			you may take the rise and divide it by the run. This is calculated from y2-y1 and x2-x1,
-			right? This also just so happens to describe a vector, seen here &#123; &Delta;x &Delta;y &#125;.
+			right? This also just so happens to describe a vector, seen here &#123; &Delta;x, &Delta;y &#125;.
 		</p>
 
 		<p>
@@ -77,25 +77,5 @@ export function Vectors() {
 			trigonometric values, and can be applied in a wide range of scenarios as a set of scalars,
 			or in element wise operations.
 		</p>
-
-		<hr />
-
-		<strong>Dot Product</strong>
-
-		<hr />
-
-		<strong>Cross Product</strong>
-
-		<hr />
-
-		<strong>Basic Transformations</strong>
-
-		<hr />
-
-		<strong>Matrix Transformations</strong>
-
-		<hr />
-
-		<strong>Homogenous Coordinates</strong>
     </>;
 }
