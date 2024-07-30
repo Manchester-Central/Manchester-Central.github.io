@@ -13,6 +13,7 @@ let WIDTH = 600;
 let HEIGHT = 400;
 const ORIGIN = new THREE.Vector3();
 let INITIAL_SPOT = new THREE.Vector3(2,1,0);
+let INITIAL_MARKER = makeCube(0.2, INITIAL_SPOT);
 let END_SPOT = new THREE.Vector3(8,9,0);
 let END_MARKER = makeCube(0.2, END_SPOT);
 let WHEEL_STARTS = [
@@ -122,10 +123,38 @@ export default function SwerveSimulation() {
 			return l;
 		}
 
-		updateVectors(robot_origin: THREE.Vector3, translation_speed: number, rotation_speed: number) {
+		updateLine2FromRay(line: Line2, ray: THREE.Ray, scale: number = 1.0) {
+			line.geometry.dispose();
+			var targ_point = ray.origin.clone().add(ray.direction.clone());
+			var points = flattenVectorsToArray([ray.origin, targ_point]);
+			var geometry = new LineGeometry();
+			geometry.setPositions( points );
+			line.geometry = geometry;
+		}
+
+		updateVectors(robot_origin: THREE.Vector3, facing_angle: number, translation_speed: number) {
+			var rot_matrix = new THREE.Matrix4().makeRotationZ(facing_angle);
+			this.translation_ray.origin.applyMatrix4(rot_matrix);
 			updateLineWithPoints(this.translation_line, [
-				this.translation_ray.origin,
-				this.translation_ray.origin.clone().add(this.translation_ray.direction)
+				this.translation_ray.origin.clone().add(robot_origin),
+				this.translation_ray.origin.clone().add(robot_origin).add(this.translation_ray.direction.clone())
+			]);
+			this.centripetal_ray.applyMatrix4(rot_matrix);
+			updateLineWithPoints(this.centripetal_line, [
+				this.centripetal_ray.origin.clone().add(robot_origin),
+				this.centripetal_ray.origin.clone().add(robot_origin).add(this.centripetal_ray.direction.clone())
+			]);
+			this.tangent_ray.applyMatrix4(rot_matrix);
+			this.tangent_ray.direction.normalize().multiplyScalar(this.offset.length());
+			updateLineWithPoints(this.tangent_line, [
+				this.tangent_ray.origin.clone().add(robot_origin),
+				this.tangent_ray.origin.clone().add(robot_origin).add(this.tangent_ray.direction.clone())
+			]);
+			var effctv = TRANSLATION_DIRECTION.clone().add(this.tangent_ray.direction);
+			this.effective_ray.set(this.tangent_ray.origin, effctv);
+			updateLineWithPoints(this.effective_line, [
+				this.effective_ray.origin.clone().add(robot_origin),
+				this.effective_ray.origin.clone().add(robot_origin).add(this.effective_ray.direction.clone())
 			]);
 		}
 	}
@@ -133,16 +162,20 @@ export default function SwerveSimulation() {
 	class Robot {
 		wheels: Array<RobotWheel>;
 		center: THREE.Vector3;
+		facing_angle: number;
 
 		constructor() {
 			this.wheels = [];
 			this.center = INITIAL_SPOT.clone();
+			this.facing_angle = 0;
 		}
 
-		updateRobot(robot_origin: THREE.Vector3, time_delta: number) {
+		updateRobot(time_delta: number) {
+			var rot = rot_speed*(Math.PI/180)*time_delta;
+			this.facing_angle = rot;
+
 			this.wheels.forEach((wheel) => {
-				//console.log(wheel);
-				wheel.updateVectors(robot_origin, trans_speed*time_delta, rot_speed*time_delta);
+				wheel.updateVectors(this.center, this.facing_angle, trans_speed*time_delta);
 			});
 		}
 	}
@@ -179,13 +212,18 @@ export default function SwerveSimulation() {
 		gridHelper.position.setComponent(1, 5);
 		gridHelper.rotation.setFromVector3(new THREE.Vector3(Math.PI/2, 0, 0));
 		scene.add( gridHelper );
+		scene.add(INITIAL_MARKER);
 		scene.add(END_MARKER);
-		animate();
 
+		var clock = new THREE.Clock();
+		clock.start();
+
+		animate();
 		function animate() {
 			requestAnimationFrame(animate);
+			var time_delta = clock.getDelta();
 			// We could update the lines here
-			parts.updateRobot(ORIGIN, 0.1);
+			parts.updateRobot(time_delta);
 			renderer?.render(scene, camera);
 		}
 	}, []);
