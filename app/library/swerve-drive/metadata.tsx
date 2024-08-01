@@ -4,7 +4,6 @@ import { TranslationalMovement } from "./translational-movement";
 import { RotationalMovement } from "./rotational-movement";
 import { CombinedMovement } from "./combined-movement";
 import { InPractice } from "./in-practice";
-import { Motors } from "./motors";
 
 const sections: DocumentationSection[] = [
   {
@@ -18,6 +17,10 @@ const sections: DocumentationSection[] = [
   {
     title: "Combined Movement",
     html: <CombinedMovement/>
+  },
+  {
+    title: "In Practice",
+    html: <InPractice/>
   },
 ]
 

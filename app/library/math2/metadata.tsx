@@ -2,13 +2,8 @@ import { DocumentationMetadata, DocumentationSection } from "@/app/library/docum
 import { Introduction } from "./introduction";
 import { Stats } from "./stats";
 import { Physics } from "./physics";
-import { Matrices } from "./matrices";
 
 const sections: DocumentationSection[] = [
-	{
-		title: "Matrices",
-		html: <Matrices/>
-	},
 	{
 		title: "Statistics",
 		html: <Stats/>

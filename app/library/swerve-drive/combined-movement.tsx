@@ -13,12 +13,11 @@ export function CombinedMovement() {
 			<SwerveSimulation />
 		</div>
 
-		<p>
-			The blue lines are the lines to the robot center.
-			The red lines are the tangent vector.
-			The green lines are the translation vector.
-			The black lines are the effective vector.
-			TODO: Make it more interactive.
+		<p className="centered-content"><br />
+			The blue lines are the lines to the robot center.<br />
+			The red lines are the tangent vector.<br />
+			The green lines are the translation vector.<br />
+			The black lines are the effective vector.<br />
 		</p>
     </>;
 }

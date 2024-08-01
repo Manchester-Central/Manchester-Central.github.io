@@ -8,9 +8,12 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Line2 } from 'three/addons/lines/Line2.js';
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
+// maybe I make the start/end points be movable? https://jsfiddle.net/xa9uscme/1/
 
 let WIDTH = 600;
 let HEIGHT = 400;
+var trans_speed = 1;
+var rot_speed = 30;
 const ORIGIN = new THREE.Vector3();
 let INITIAL_SPOT = new THREE.Vector3(2,1,0);
 let INITIAL_MARKER = makeCube(0.2, INITIAL_SPOT);
@@ -78,9 +81,10 @@ function makeCube(length: number, location: THREE.Vector3) {
 
 export default function SwerveSimulation() {
 	const [_renderer, setRenderer] = useState<THREE.WebGLRenderer>();
-	var [rot_speed, setRotSpeed] = useState(30);
-	var [trans_speed, setTransSpeed] = useState(4);
+	var [rtspd, setRotSpeed] = useState(30);
+	var [tspd, setTransSpeed] = useState(1);
 	var [playing, setPlaying] = useState(false);
+	
 
 	class RobotWheel {
 		offset: THREE.Vector3;
@@ -95,7 +99,7 @@ export default function SwerveSimulation() {
 
 		constructor(scene: THREE.Scene, offset: THREE.Vector3) {
 			this.offset = offset;
-			this.translation_ray = new THREE.Ray(offset.clone(), TRANSLATION_DIRECTION.clone());
+			this.translation_ray = new THREE.Ray(offset.clone(), TRANSLATION_DIRECTION.clone().normalize());
 			this.centripetal_ray = new THREE.Ray(ORIGIN, offset.clone());
 			var tangent_direction = new THREE.Vector3(-offset.y, offset.x, 0);
 			tangent_direction.normalize();
@@ -123,34 +127,27 @@ export default function SwerveSimulation() {
 			return l;
 		}
 
-		updateLine2FromRay(line: Line2, ray: THREE.Ray, scale: number = 1.0) {
-			line.geometry.dispose();
-			var targ_point = ray.origin.clone().add(ray.direction.clone());
-			var points = flattenVectorsToArray([ray.origin, targ_point]);
-			var geometry = new LineGeometry();
-			geometry.setPositions( points );
-			line.geometry = geometry;
-		}
-
-		updateVectors(robot_origin: THREE.Vector3, facing_angle: number, translation_speed: number) {
+		updateVectors(robot_origin: THREE.Vector3, facing_angle: number) {
 			var rot_matrix = new THREE.Matrix4().makeRotationZ(facing_angle);
 			this.translation_ray.origin.applyMatrix4(rot_matrix);
 			updateLineWithPoints(this.translation_line, [
 				this.translation_ray.origin.clone().add(robot_origin),
-				this.translation_ray.origin.clone().add(robot_origin).add(this.translation_ray.direction.clone())
+				this.translation_ray.origin.clone().add(robot_origin).add(this.translation_ray.direction.clone().multiplyScalar(trans_speed))
 			]);
 			this.centripetal_ray.applyMatrix4(rot_matrix);
 			updateLineWithPoints(this.centripetal_line, [
 				this.centripetal_ray.origin.clone().add(robot_origin),
-				this.centripetal_ray.origin.clone().add(robot_origin).add(this.centripetal_ray.direction.clone())
+				this.centripetal_ray.origin.clone().add(robot_origin).add(this.centripetal_ray.direction.clone().multiplyScalar(this.offset.length()))
 			]);
+			var tang_speed = Math.PI*(rot_speed/180)*this.offset.length();
 			this.tangent_ray.applyMatrix4(rot_matrix);
-			this.tangent_ray.direction.normalize().multiplyScalar(this.offset.length());
+			this.tangent_ray.direction.normalize();
 			updateLineWithPoints(this.tangent_line, [
 				this.tangent_ray.origin.clone().add(robot_origin),
-				this.tangent_ray.origin.clone().add(robot_origin).add(this.tangent_ray.direction.clone())
+				this.tangent_ray.origin.clone().add(robot_origin).add(this.tangent_ray.direction.clone().multiplyScalar(tang_speed))
 			]);
-			var effctv = TRANSLATION_DIRECTION.clone().add(this.tangent_ray.direction);
+			var effctv = this.translation_ray.direction.clone().multiplyScalar(trans_speed)
+					.add(this.tangent_ray.direction.clone().multiplyScalar(tang_speed));
 			this.effective_ray.set(this.tangent_ray.origin, effctv);
 			updateLineWithPoints(this.effective_line, [
 				this.effective_ray.origin.clone().add(robot_origin),
@@ -173,9 +170,14 @@ export default function SwerveSimulation() {
 		updateRobot(time_delta: number) {
 			var rot = rot_speed*(Math.PI/180)*time_delta;
 			this.facing_angle = rot;
+			this.center.add(TRANSLATION_DIRECTION.clone().multiplyScalar(time_delta*trans_speed));
+
+			if (INITIAL_SPOT.distanceTo(END_SPOT) < this.center.distanceTo(INITIAL_SPOT)) {
+				this.center = INITIAL_SPOT.clone();
+			}
 
 			this.wheels.forEach((wheel) => {
-				wheel.updateVectors(this.center, this.facing_angle, trans_speed*time_delta);
+				wheel.updateVectors(this.center, this.facing_angle);
 			});
 		}
 	}
@@ -203,9 +205,9 @@ export default function SwerveSimulation() {
 
 		/// geometry ///
 		const parts = new Robot();
-		parts.wheels.push(new RobotWheel(scene, WHEEL_STARTS[0]));
-		parts.wheels.push(new RobotWheel(scene, WHEEL_STARTS[1]));
-		parts.wheels.push(new RobotWheel(scene, WHEEL_STARTS[2]));
+		WHEEL_STARTS.forEach((wheel) => {
+			parts.wheels.push(new RobotWheel(scene, wheel));
+		});
 
 		const gridHelper = new THREE.GridHelper( 10, 10 );
 		gridHelper.position.setComponent(0, 5);
@@ -249,20 +251,22 @@ export default function SwerveSimulation() {
 					Rotation Speed: <Slider progress
 										style={{ marginTop: 16 }}
 										min={-360}
-										value={rot_speed}
+										value={rtspd}
 										max={360}
 										step={1.0}
 										onChange={value => {
 											setRotSpeed(value);
+											rot_speed = value;
 										}} />
 					Translation Speed: <Slider progress
 										style={{ marginTop: 16 }}
 										min={0}
-										value={trans_speed}
+										value={tspd}
 										max={10}
 										step={0.1}
 										onChange={value => {
 											setTransSpeed(value);
+											trans_speed = value;
 										}} />
 				</div>
 			</div>
