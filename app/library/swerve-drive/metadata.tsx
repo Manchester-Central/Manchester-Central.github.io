@@ -3,7 +3,7 @@ import { SwerveDriveIntroduction } from "./introduction";
 import { TranslationalMovement } from "./translational-movement";
 import { RotationalMovement } from "./rotational-movement";
 import { CombinedMovement } from "./combined-movement";
-import { InPractice } from "./in-practice";
+import { PID } from "./pid";
 
 const sections: DocumentationSection[] = [
   {
@@ -19,8 +19,8 @@ const sections: DocumentationSection[] = [
     html: <CombinedMovement/>
   },
   {
-    title: "In Practice",
-    html: <InPractice/>
+	title: "PID Loops",
+	html: <PID/>
   },
 ]
 

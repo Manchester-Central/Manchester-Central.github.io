@@ -13,7 +13,7 @@ const sections: DocumentationSection[] = [
 		html: <AprilTags/>
 	},
 	{
-		title: "Limelight",
+		title: "Limelight and PhotonVision",
 		html: <Limelight/>
 	},
 	{

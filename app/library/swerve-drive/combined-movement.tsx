@@ -9,6 +9,13 @@ export function CombinedMovement() {
 			calculated vectors to get it to move across the grid.
 		</p>
 
+		<p>
+			You may see an illusion where the center point is swaying back and forth
+			towards the target point. This is an illusion due to the inconsistent
+			placement of the wheels. You can place a ruler along the direction and see the
+			alignment for yourself.
+		</p>
+
 		<div className="centered-content">
 			<SwerveSimulation />
 		</div>
