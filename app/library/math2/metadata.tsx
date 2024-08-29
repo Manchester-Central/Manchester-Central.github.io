@@ -2,6 +2,7 @@ import { DocumentationMetadata, DocumentationSection } from "@/app/library/docum
 import { Introduction } from "./introduction";
 import { Stats } from "./stats";
 import { Physics } from "./physics";
+import { PID } from "./pid";
 
 const sections: DocumentationSection[] = [
 	{
@@ -12,6 +13,10 @@ const sections: DocumentationSection[] = [
 		title: "Physics",
 		html: <Physics/>
 	},
+	{
+		title: "PIDs",
+		html: <PID/>
+	}
 ]
 
 export const Math2Metadata: DocumentationMetadata = {
