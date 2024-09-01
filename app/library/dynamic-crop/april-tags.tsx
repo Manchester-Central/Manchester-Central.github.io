@@ -205,10 +205,10 @@ export function AprilTags() {
 			across, we get something pretty amazing.
 		</p>
 
-        <div className='centered-content'>
-            <MathJax>{ `screen_space_location = FrustumMatrix * ViewMatrix * (ModelMatrix * Vertex)` }</MathJax>
-        </div>
-        <br />
+		<div className='centered-content'>
+			<MathJax>{ `screen_space_location = FrustumMatrix * ViewMatrix * (ModelMatrix * Vertex)` }</MathJax>
+		</div>
+		<br />
 
 		<p>
 			The ModelMatrix was accounted for when we created the april tags.

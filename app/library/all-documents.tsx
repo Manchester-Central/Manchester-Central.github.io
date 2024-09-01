@@ -5,12 +5,14 @@ import { SwerveDriveMetadata } from "./swerve-drive/metadata";
 import { LauncherMetadata } from "./launcher-models/metadata";
 import { Math3Metadata } from "./math3/metadata";
 import { LocalizationMetadata } from "./localization/metadata";
+import { KinematicsMetadata } from "./kinematics/metadata";
 
 export const AllDocuments = [
 	Math1Metadata,
 	Math2Metadata,
 	Math3Metadata,
     SwerveDriveMetadata,
+	KinematicsMetadata,
 	LocalizationMetadata,
     DynamicCropMetadata,
 	LauncherMetadata,
