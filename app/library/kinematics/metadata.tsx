@@ -2,6 +2,7 @@ import { DocumentationMetadata, DocumentationSection } from "@/app/library/docum
 import { Introduction } from "./introduction";
 import { Forward } from "./forward";
 import { Inverse } from "./inverse";
+import { Kinematics2025 } from "./kinematics2025";
 
 const sections: DocumentationSection[] = [
 	{
@@ -11,7 +12,11 @@ const sections: DocumentationSection[] = [
 	{
 		title: "Inverse Kinematics",
 		html: <Inverse/>
-	}
+	},
+  {
+    title: "2025 Kinematics Model",
+    html: <Kinematics2025/>
+  }
 ]
 
 export const KinematicsMetadata: DocumentationMetadata = {
