@@ -8,12 +8,12 @@ import { LocalizationMetadata } from "./localization/metadata";
 import { KinematicsMetadata } from "./kinematics/metadata";
 
 export const AllDocuments = [
-	Math1Metadata,
-	Math2Metadata,
-	Math3Metadata,
+  Math1Metadata,
+  Math2Metadata,
+  Math3Metadata,
   SwerveDriveMetadata,
-	KinematicsMetadata,
-	LocalizationMetadata,
+  KinematicsMetadata,
+  LocalizationMetadata,
   DynamicCropMetadata,
-	LauncherMetadata,
+  LauncherMetadata,
 ]
