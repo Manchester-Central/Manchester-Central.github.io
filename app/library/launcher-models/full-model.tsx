@@ -3,6 +3,7 @@
 import { MathJax } from 'better-react-mathjax';
 import Image from 'next/image';
 import descentimg from './images/descent.png';
+import DescentDemo from './components/descent-demo';
 
 export function FullModel() {
     return <>
@@ -36,8 +37,10 @@ export function FullModel() {
 			means, iterate until the values stop changing a meaningful amount.
 		</p>
 
-		<p>
-			TODO: One more demo, with user input.
-		</p>
+		
+		<div className="centered-content">
+			<DescentDemo />
+		</div>
+		<br />
     </>;
 }

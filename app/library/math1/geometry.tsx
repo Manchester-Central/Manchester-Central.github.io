@@ -32,8 +32,8 @@ export function Geometry() {
 		</p>
 
 		<div className='centered-content'>
-            <UnitCircleDemo/>
-        </div>
+      <UnitCircleDemo/>
+    </div>
 
 		<p>
 			What's great about this shape is that each point on the circle represents

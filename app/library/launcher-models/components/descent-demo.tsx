@@ -29,18 +29,26 @@ function Container({ child }: ContainerProps) {
 	);
 }
 
-var current_position = new THREE.Vector3(4,3,0.8);
-var target_position = new THREE.Vector3(1,4,0);
+var current_position = new THREE.Vector3(4,3,0);
+var target_position = new THREE.Vector3(0,4,2);
 var current_velocity = new THREE.Vector3(2,2,0);
-var target_angle = 52*Math.PI/180;
+// We only care about the vertical component of our velocity vector to keep things simple
+var target_speed = 3;
+var aim_tolerance = 0.1;
+var distance_coeff = 0.1;
 
-export default function LandingForAngleDemo() {
+export default function DescentDemo() {
 	const [_renderer, setRenderer] = useState<THREE.WebGLRenderer>();
+	// robot position
 	const [posX, setPosX] = useState(3);
 	const [posY, setPosY] = useState(4);
+	// robot velocity
 	const [velX, setVelX] = useState(1);
 	const [velY, setVelY] = useState(1);
-	var [targAngle, setTargAngle] = useState(3.141592/2.5);
+	// tuning vars
+	var [toleranceMeters, setAimTolerance] = useState(0.4);
+	var [distCoeff, setDistCoeff] = useState(0.1);
+	var [targSpeed, setTargSpeed] = useState(3);
 
 	// Makes a line following the projectile's path
 	function makeTrajectory(initial_vector: THREE.Vector3, initial_point: THREE.Vector3, acceleration: THREE.Vector3) {
@@ -67,6 +75,9 @@ export default function LandingForAngleDemo() {
 		return vec;
 	}
 
+	// Converts a sequence of THREE.Vector3s to a native list of numbers.
+	// THREE.js uses this in its geometry buffers and converts them back
+	// to the correct buffer layout for WebGPU.
 	function flattenVectorsToArray(list_of_vectors: Array<THREE.Vector3>) {
 		var points = [];
 		for (var i = 0; i < list_of_vectors.length; i++) {
@@ -77,6 +88,8 @@ export default function LandingForAngleDemo() {
 		return points;
 	}
 
+	// Converts a list of THREE.Vector3s to a more readable line object that
+	// is easier to read.
 	function makeThickLine(list_of_points: Array<THREE.Vector3>, line_color: string) {
 		var points = flattenVectorsToArray(list_of_points);
 		var geometry = new LineGeometry();
@@ -87,23 +100,50 @@ export default function LandingForAngleDemo() {
 	}
 
 	// The real meat and potatoes
-	function calculateLandingArc(current_position: THREE.Vector3,
-								target_position: THREE.Vector3,
-								current_velocity: THREE.Vector3) {
-		var ground_vector = target_position.clone().sub(current_position);
-		ground_vector.setComponent(2, 0);
-		var final = new THREE.Vector3();
-		var d = ground_vector.length();
-		var h = target_position.z - current_position.z;
-		var x_hat = Math.sqrt( (9.81/2*d*d) / (Math.sin(target_angle)/Math.cos(target_angle)*d - h) )
-		ground_vector = ground_vector.divideScalar(d).multiplyScalar(x_hat);
+	function IterateGradiantDescent(current_aim: THREE.Vector3,
+									current_position: THREE.Vector3,
+									target_position: THREE.Vector3,
+									current_velocity: THREE.Vector3) {
+		var release_vector = combineVectors([current_aim, current_velocity]);
+		var arc_path = makeTrajectory(release_vector, current_position, GRAVITY);
 
-		var y_hat = x_hat * Math.sin(target_angle)/Math.cos(target_angle);
+		if (arc_path.length == 0) {
+			return current_aim.clone();
+		}
+		
+		// Distance Trackers
+		var min_point: THREE.Vector3 = arc_path[0];
+		var diff_vector = target_position.sub(arc_path[0]);
+		console.log(diff_vector);
+		var min_distance: number = diff_vector.length();
+		// Velocity Trackers
+		var euler_velocity: THREE.Vector3 = new THREE.Vector3();
+		// We can't assume the first closest point is the actual closest point,
+		// because that will kill high angle lobs, so unfortunately we have to
+		// either solve the parabolic equation, the vector calculus, or iterate
+		// through the whole array. We choose the latter for simplicity for now.
+		return current_aim.clone();
+		for (var idx = 1; idx < arc_path.length; idx++) {
+			var dist = target_position.sub(arc_path[idx]);
+			if (dist.length() < min_distance) {
+				diff_vector = dist;
+				min_distance = diff_vector.length();
+				min_point = arc_path[idx].clone();
+			}
+		}
 
-		var final = ground_vector.clone();
-		final.setComponent(2, y_hat).sub(current_velocity);
+		// If aim is within tolerance, return the current aim vector!
+		if (min_distance < aim_tolerance) {
+			return current_aim.clone();
+		}
 
-		return final
+		// shift the aim by some proportion of the error
+		var aim_difference = diff_vector.clone().multiplyScalar(distance_coeff);
+		current_aim = current_aim.add(aim_difference);
+
+		// if the peak is short, reduce angle and increase velocity
+
+		return current_aim.clone();
 	}
 
 	function updateLineWithPoints(line: Line2, list_of_vec3: Array<THREE.Vector3>) {
@@ -120,7 +160,7 @@ export default function LandingForAngleDemo() {
 	var target_obj = makeThickLine(
 			[current_position.clone(), target_position.clone()],
 			"#00ff00");
-	var aim_vector = calculateLandingArc(current_position, target_position, current_velocity);
+	var aim_vector = IterateGradiantDescent(new THREE.Vector3(), current_position, target_position, current_velocity);
 	var aim_obj = makeThickLine(
 			[current_position.clone(), current_position.clone().add(aim_vector)],
 			"#0000ff");
@@ -170,7 +210,7 @@ export default function LandingForAngleDemo() {
 			updateLineWithPoints(velocity_obj,
 				[current_position.clone(), current_position.clone().add(current_velocity)]);
 			updateLineWithPoints(target_obj, [current_position.clone(), target_position.clone()]);
-			aim_vector = calculateLandingArc(current_position, target_position, current_velocity);
+			aim_vector = IterateGradiantDescent(aim_vector, current_position, target_position, current_velocity);
 			updateLineWithPoints(aim_obj, [current_position.clone(), current_position.clone().add(aim_vector)]);
 			updateLineWithPoints(trajectory_arc_obj,
 				makeTrajectory(combineVectors([current_velocity.clone(), aim_vector]), current_position, GRAVITY));
@@ -222,7 +262,7 @@ export default function LandingForAngleDemo() {
 										}} />
 					Velocity Y: <Slider progress
 										style={{ marginTop: 16 }}
-										min={-5}
+										min={0-5}
 										value={velY}
 										max={5}
 										step={0.1}
@@ -230,15 +270,36 @@ export default function LandingForAngleDemo() {
 											current_velocity.setComponent(1, velY);
 											setVelY(value);
 										}} />
-					Release Angle: <Slider progress
+					Target Speed: <Slider progress
+										style={{ marginTop: 16 }}
+										min={-5}
+										value={targSpeed}
+										max={10}
+										step={0.1}
+										onChange={value => {
+											target_speed = value;
+											setTargSpeed(value);
+										}} />
+					
+					Aim Tolerance: <Slider progress
 										style={{ marginTop: 16 }}
 										min={0}
-										value={targAngle}
-										max={3.141592/2.2}
+										value={aim_tolerance}
+										max={1.5}
+										step={0.05}
+										onChange={value => {
+											aim_tolerance = value;
+											setAimTolerance(value);
+										}} />
+					Change Coefficient: <Slider progress
+										style={{ marginTop: 16 }}
+										min={0}
+										value={distance_coeff}
+										max={2}
 										step={0.01}
 										onChange={value => {
-											target_angle = value;
-											setTargAngle(value);
+											distance_coeff = value;
+											setDistCoeff(value);
 										}} />
 				</div>
 			</div>
