@@ -11,9 +11,9 @@ export const AllDocuments = [
 	Math1Metadata,
 	Math2Metadata,
 	Math3Metadata,
-    SwerveDriveMetadata,
+  SwerveDriveMetadata,
 	KinematicsMetadata,
 	LocalizationMetadata,
-    DynamicCropMetadata,
+  DynamicCropMetadata,
 	LauncherMetadata,
 ]

@@ -172,7 +172,9 @@ export function Forward() {
 			relative to the robot origin. To make that a field relative vector, the resulting
 			vector must be rotated again based on the robot's field pose. In most cases, that
 			means you just do one more rotation, yielding our final 3d point on the field <br />
-			<i>[x'', y'', z'']</i>
+			<i>[x'', y'', z'']</i>. Note that because this is now robot relative, and the robot
+      is presumably flat on the ground, we only multiply by R<sub>z</sub>. Other rare
+      robot pose orientations would have different rotations used.
 		</p>
 
 		<div className="centered-content" style={{display: 'flex', alignItems: 'center'}}>

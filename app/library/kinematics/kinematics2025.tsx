@@ -2,7 +2,7 @@ import Image from 'next/image';
 
 import trianglesolve from './images/inv_trig_2025_solution.png';
 
-import ForwardExample from './components/forward';
+import ForwardExample from './components/fk';
 
 export function Kinematics2025() {
     return <>

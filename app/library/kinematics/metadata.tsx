@@ -21,9 +21,9 @@ const sections: DocumentationSection[] = [
 
 export const KinematicsMetadata: DocumentationMetadata = {
   path: "kinematics",
-  title: "Kinematics",
+  title: "Fwd/Inv Kinematics",
   description: "Discussing the techniques of direct and inverse kinematics.",
-  lastUpdated: "July 2024",
+  lastUpdated: "Oct 2025",
   introduction: <Introduction/>,
   sections: sections,
 }

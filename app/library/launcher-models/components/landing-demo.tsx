@@ -230,7 +230,7 @@ export default function LandingForAngleDemo() {
 											current_velocity.setComponent(1, velY);
 											setVelY(value);
 										}} />
-					Target Angle: <Slider progress
+					Release Angle: <Slider progress
 										style={{ marginTop: 16 }}
 										min={0}
 										value={targAngle}
