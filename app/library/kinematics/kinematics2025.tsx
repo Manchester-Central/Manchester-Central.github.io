@@ -3,6 +3,9 @@ import Image from 'next/image';
 import trianglesolve from './images/inv_trig_2025_solution.png';
 
 import ForwardExample from './components/fk';
+import InverseExample from './components/ik';
+
+import robot from './images/2025robot.png';
 
 export function Kinematics2025() {
     return <>
@@ -10,6 +13,10 @@ export function Kinematics2025() {
       So lets take a look at how some of these concepts can be used, and look at the
       2 jointed robot design from 2025, <i>Angler</i>.
     </p>
+
+    <div className="centered-content">
+      <Image src={robot} width="500" alt="Chaos's 2025 robot" />
+    </div>
 
     <hr />
 
@@ -101,6 +108,25 @@ export function Kinematics2025() {
     <div>
       Now, having this, we can derive what the angle of the base pivot is to put our wrist
       in the right spot, as well as the angle of the wrist relative to the lift.
+    </div>
+
+    <div className='centered-content'>
+      <InverseExample />
+    </div>
+
+    <div>
+      As you control the target location, you can see how the robot re-orients its parts
+      to calculate the 3 terms from earlier. See how close the values get to the previous
+      demo above? By implementing a few constraints into the problem, and blending
+      techniques, you can simplify many Inverse Kinematic problems!
+    </div>
+
+    <div>
+      You might notice you can shove the end effector right through the robot itself, that's
+      no good! It's important when designing systems like this to enforce bounds on joints,
+      and range of things. For instance, we don't ever want the lift on the 2025 robot to
+      rotate backwards too much. We <i>also</i> don't want to shove the gripper through the
+      bottom. Setting a range of acceptable values is critical to a functioning robot.
     </div>
 
     </>;
