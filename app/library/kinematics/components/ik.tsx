@@ -94,16 +94,15 @@ var gripper_segment = makeThickLine(
 );
 gripper_segment.material.linewidth = 4;
 
-export default function ForwardExample() {
+export default function InverseExample() {
   const [_renderer, setRenderer] = useState<THREE.WebGLRenderer>();
-  const [debugText, setDebugText] = useState<string>();
   const [first_term, setFirstTerm] = useState<string>();
   const [second_term, setSecondTerm] = useState<string>();
   const [third_term, setThirdTerm] = useState<string>();
 
-  const [pivot_deg, setPivotDeg] = useState(30);
-  const [elevator_height, setElevatorHeight] = useState(0.3);
-  const [wrist_deg, setWristDeg] = useState(-50);
+  const [target_x, setTargetX] = useState(0.8);
+  const [target_y, setTargetY] = useState(1.2);
+  const [endeff_angle, setEndEffAngle] = useState(-50);
 
   const [MousePosition, setMousePosition] = useState({
     left: 0,
@@ -126,41 +125,60 @@ export default function ForwardExample() {
     var centerx = offsets.x + offsets.width/2;
     var centery = offsets.y + offsets.height/2;
     var origin = new THREE.Vector3(0,0,0.1);
+    var endeff_point = new THREE.Vector3(target_x, target_y, 0.1);
     // Note the coordinate inversion here
 
     // Setup the base offset to the bottom of the lift
     var base_offset_points = [new THREE.Vector3(0, 0, 0.1), new THREE.Vector3(-0.3, 0.2, 0.1)]
     updateLineWithPoints(base_offset, base_offset_points);
+
+    // Setup the wrist/end eff
+    var gripper_points = [endeff_point,
+        new THREE.Vector3(Math.cos((endeff_angle)/180.0*Math.PI),
+                          Math.sin((endeff_angle)/180.0*Math.PI),
+                          0).multiplyScalar(-GRIPPER_LENGTH)
+                            .add(endeff_point)]
+    updateLineWithPoints(gripper_segment, gripper_points);
     
+    // Do some of our invkin math
+    var bottom_elevator = base_offset_points[1];
+    var wrist_point = gripper_points[1];
+    var distance = wrist_point.distanceTo(bottom_elevator);
+    var distance_vector = wrist_point.sub(bottom_elevator);
+
+    var subtriangle_angle_radians = Math.abs(CARRIAGE_MOUNT_ANGLE)/180.0*Math.PI;
+
+    var dc_length = Math.sin(subtriangle_angle_radians)*CARRIAGE_MOUNT_LENGTH;
+    var angle_a_radians = Math.asin(dc_length/distance);
+    var elevator_angle_radians = angle_a_radians +
+        Math.atan2(distance_vector.getComponent(1), distance_vector.getComponent(0));
+    console.log("elevator_angle_radians = y / x",
+      elevator_angle_radians,
+      distance_vector.getComponent(1),
+      distance_vector.getComponent(0));
+    var elevator_height = Math.cos(angle_a_radians)*distance -
+        Math.cos(subtriangle_angle_radians)*CARRIAGE_MOUNT_LENGTH;
+
     // Setup the length of the elevator
-    var elevator_points = [base_offset_points[1],
-        new THREE.Vector3(Math.cos(pivot_deg/180.0*Math.PI),
-                          Math.sin(pivot_deg/180.0*Math.PI),
+    var elevator_points = [bottom_elevator,
+        new THREE.Vector3(Math.cos(elevator_angle_radians),
+                          Math.sin(elevator_angle_radians),
                           0).multiplyScalar(elevator_height)
-                            .add(base_offset_points[1])]
+                            .add(bottom_elevator)]
     updateLineWithPoints(elevator_segment, elevator_points);
 
     // Setup the carriage mount
     var carriage_points = [elevator_points[1],
-        new THREE.Vector3(Math.cos((pivot_deg+CARRIAGE_MOUNT_ANGLE)/180.0*Math.PI),
-                          Math.sin((pivot_deg+CARRIAGE_MOUNT_ANGLE)/180.0*Math.PI),
+        new THREE.Vector3(Math.cos(elevator_angle_radians+CARRIAGE_MOUNT_ANGLE/180.0*Math.PI),
+                          Math.sin(elevator_angle_radians+CARRIAGE_MOUNT_ANGLE/180.0*Math.PI),
                           0).multiplyScalar(CARRIAGE_MOUNT_LENGTH)
                             .add(elevator_points[1])]
     updateLineWithPoints(carriage_mount, carriage_points);
 
-    // Setup the wrist/end eff
-    var gripper_points = [carriage_points[1],
-        new THREE.Vector3(Math.cos((pivot_deg+CARRIAGE_MOUNT_ANGLE+wrist_deg)/180.0*Math.PI),
-                          Math.sin((pivot_deg+CARRIAGE_MOUNT_ANGLE+wrist_deg)/180.0*Math.PI),
-                          0).multiplyScalar(GRIPPER_LENGTH)
-                            .add(carriage_points[1])]
-    updateLineWithPoints(gripper_segment, gripper_points);
-
     // Display EndEffector value
-    setDebugText(`End Effector Location =`);
-    setFirstTerm(`${gripper_points[1].getComponent(0)}`);
-    setSecondTerm(`${gripper_points[1].getComponent(1)}`);
-    setThirdTerm(`${gripper_points[1].getComponent(2)}`);
+    setFirstTerm(`Base Pivot Angle: ${elevator_angle_radians*180.0/Math.PI}`);
+    setSecondTerm(`Elevator Height: ${elevator_height}`);
+    setThirdTerm(`Wrist Angle: ${elevator_angle_radians*180.0/Math.PI+CARRIAGE_MOUNT_ANGLE+endeff_angle}`);
   }
 
   useEffect(() => {
@@ -188,7 +206,7 @@ export default function ForwardExample() {
 
 
     controls.update();
-    controls.enabled = false;
+    // controls.enabled = false;
     animate();
 
     function animate() {
@@ -210,40 +228,39 @@ export default function ForwardExample() {
       onMouseMove={handleMouseMove}
     >
       <Container id="fk" child={_renderer.domElement} />
-      <div>{debugText}</div>
-      <div>&lt;{first_term},</div>
-      <div>{second_term},</div>
-      <div>0&gt;</div>
+      <div>{first_term}</div>
+      <div>{second_term}</div>
+      <div>{third_term}</div>
       <div>
-          Base Pivot Angle: <Slider progress
+          Target X: <Slider progress
                     style={{ marginTop: 16 }}
-                    min={0}
-                    value={pivot_deg}
-                    max={100}
-                    step={1.0}
+                    min={-1}
+                    value={target_x}
+                    max={2.5}
+                    step={0.1}
                     onChange={value => {
                       // current_position.setComponent(0, pivot_deg);
-                      setPivotDeg(value);
+                      setTargetX(value);
                     }} />
-          Elevator Height: <Slider progress
+          Target Y: <Slider progress
                     style={{ marginTop: 16 }}
                     min={0}
-                    value={elevator_height}
+                    value={target_y}
                     max={3}
                     step={0.1}
                     onChange={value => {
                       // current_position.setComponent(1, elevator_height);
-                      setElevatorHeight(value);
+                      setTargetY(value);
                     }} />
-          Wrist Angle: <Slider progress
+          EndEff Angle: <Slider progress
                     style={{ marginTop: 16 }}
-                    min={-70}
-                    value={wrist_deg}
-                    max={10}
-                    step={0.1}
+                    min={-90}
+                    value={endeff_angle}
+                    max={90}
+                    step={1}
                     onChange={value => {
                       // current_position.setComponent(1, wrist_deg);
-                      setWristDeg(value);
+                      setEndEffAngle(value);
                     }} />
         </div>
     </div>
