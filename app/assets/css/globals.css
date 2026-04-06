@@ -66,6 +66,10 @@ pre {
     font-size: 0.8em;
 }
 
+.sidebar-logo-custom img {
+  width: 100px;
+}
+
 .bg-chaos-light-green {
     background-color: #cbe0d2;
 }

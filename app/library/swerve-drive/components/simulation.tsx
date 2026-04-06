@@ -217,11 +217,12 @@ export default function SwerveSimulation() {
 		scene.add(INITIAL_MARKER);
 		scene.add(END_MARKER);
 
-		var clock = new THREE.Clock();
-		clock.start();
+		var clock = new THREE.Timer();
+		clock.update();
 
 		animate();
 		function animate() {
+				clock.update();
 			requestAnimationFrame(animate);
 			var time_delta = clock.getDelta();
 			// We could update the lines here

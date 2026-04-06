@@ -7,8 +7,7 @@ import React from 'react';
 import { Slider } from "rsuite";
 
 import dynamic from "next/dynamic";
-const Plot = dynamic(() => import("react-plotly.js"), { ssr: false, })
-import {PlotParams} from 'react-plotly.js';
+const Plot = dynamic(() => import("react-plotly.js"), { ssr: false, }) as any;
 
 function PIDExample() {
 	var [pval, setP] = useState(0.1);
