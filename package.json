@@ -9,7 +9,7 @@
 		"lint": "next lint"
 	},
 	"dependencies": {
-		"better-react-mathjax": "^2.3.0",
+		"better-react-mathjax": "^3.0.0",
 		"flowbite-react": "^0.12.17",
 		"highlight.js": "^11.11.1",
 		"mathjax": "^4.1.1",
