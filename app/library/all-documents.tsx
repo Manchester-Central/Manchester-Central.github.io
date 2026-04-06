@@ -1,5 +1,6 @@
 import { Math1Metadata } from "./math1/metadata";
 import { Math2Metadata } from "./math2/metadata";
+import { SoftwareProjectStructureMetadata } from "./software-project-structure/metadata";
 import { DynamicCropMetadata } from "./dynamic-crop/metadata";
 import { SwerveDriveMetadata } from "./swerve-drive/metadata";
 import { LauncherMetadata } from "./launcher-models/metadata";
@@ -11,6 +12,7 @@ export const AllDocuments = [
   Math1Metadata,
   Math2Metadata,
   Math3Metadata,
+  SoftwareProjectStructureMetadata,
   SwerveDriveMetadata,
   KinematicsMetadata,
   LocalizationMetadata,

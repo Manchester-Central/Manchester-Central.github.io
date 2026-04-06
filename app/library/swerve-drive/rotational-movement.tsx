@@ -11,7 +11,7 @@ export function RotationalMovement() {
 		</p>
 
 		<div className="centered-content">
-			<Image src={tangentvector} width={300} height={300} alt="Vectors" />
+			<Image src={tangentvector} width={300} alt="Vectors" />
 		</div>
 
 		<p>
