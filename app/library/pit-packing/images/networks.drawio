@@ -1,0 +1,66 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="rPIf6sjb6nVwSxsEnEpr">
+    <mxGraphModel dx="1208" dy="792" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="oZEG_cPHbI3wh4_NDDcW-1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;" value="Switch" vertex="1">
+          <mxGeometry height="120" width="240" x="280" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="oZEG_cPHbI3wh4_NDDcW-3" edge="1" parent="1" source="oZEG_cPHbI3wh4_NDDcW-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=none;endFill=0;" target="oZEG_cPHbI3wh4_NDDcW-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="oZEG_cPHbI3wh4_NDDcW-2" parent="1" style="image;html=1;image=img/lib/clip_art/networking/Wireless_Router_128x128.png" value="4G Cell Router" vertex="1">
+          <mxGeometry height="80" width="80" x="40" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="oZEG_cPHbI3wh4_NDDcW-4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Internet Side" vertex="1">
+          <mxGeometry height="90" width="120" x="280" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="oZEG_cPHbI3wh4_NDDcW-7" edge="1" parent="1" source="oZEG_cPHbI3wh4_NDDcW-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;endArrow=none;endFill=0;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="610" y="220" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="oZEG_cPHbI3wh4_NDDcW-5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="Robot Side" vertex="1">
+          <mxGeometry height="90" width="120" x="400" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="oZEG_cPHbI3wh4_NDDcW-9" edge="1" parent="1" source="oZEG_cPHbI3wh4_NDDcW-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.25;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;endArrow=none;endFill=0;" target="oZEG_cPHbI3wh4_NDDcW-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="oZEG_cPHbI3wh4_NDDcW-8" parent="1" style="image;html=1;image=img/lib/clip_art/computers/Laptop_128x128.png" value="Driver Station" vertex="1">
+          <mxGeometry height="80" width="80" x="520" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="oZEG_cPHbI3wh4_NDDcW-11" edge="1" parent="1" source="oZEG_cPHbI3wh4_NDDcW-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;dashed=1;endArrow=none;endFill=0;" target="oZEG_cPHbI3wh4_NDDcW-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="oZEG_cPHbI3wh4_NDDcW-12" edge="1" parent="1" source="oZEG_cPHbI3wh4_NDDcW-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;dashed=1;endArrow=none;endFill=0;" target="oZEG_cPHbI3wh4_NDDcW-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="oZEG_cPHbI3wh4_NDDcW-10" parent="1" style="image;html=1;image=img/lib/clip_art/computers/Laptop_128x128.png" value="Programming Laptop" vertex="1">
+          <mxGeometry height="80" width="80" x="320" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="oZEG_cPHbI3wh4_NDDcW-15" connectable="0" parent="1" style="group" value="" vertex="1">
+          <mxGeometry height="110" width="127" x="610" y="165" as="geometry" />
+        </mxCell>
+        <mxCell id="oZEG_cPHbI3wh4_NDDcW-14" parent="oZEG_cPHbI3wh4_NDDcW-15" style="verticalLabelPosition=bottom;outlineConnect=0;align=center;dashed=0;html=1;verticalAlign=top;shape=mxgraph.pid.misc.tank_car,_tank_wagon;" value="Comp Robot" vertex="1">
+          <mxGeometry height="80" width="127" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="oZEG_cPHbI3wh4_NDDcW-13" parent="oZEG_cPHbI3wh4_NDDcW-15" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/other/Defender_Industrial_Robot.svg;" value="" vertex="1">
+          <mxGeometry height="70" width="52.58" x="37.20999999999998" as="geometry" />
+        </mxCell>
+        <mxCell id="oZEG_cPHbI3wh4_NDDcW-20" edge="1" parent="1" source="oZEG_cPHbI3wh4_NDDcW-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.03;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;endArrow=none;endFill=0;" target="oZEG_cPHbI3wh4_NDDcW-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="oZEG_cPHbI3wh4_NDDcW-16" parent="1" style="fontColor=#0066CC;verticalAlign=top;verticalLabelPosition=bottom;labelPosition=center;align=center;html=1;outlineConnect=0;fillColor=#CCCCCC;strokeColor=#6881B3;gradientColor=none;gradientDirection=north;strokeWidth=2;shape=mxgraph.networks.gamepad;" value="" vertex="1">
+          <mxGeometry height="40" width="60" x="640" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="oZEG_cPHbI3wh4_NDDcW-21" edge="1" parent="1" source="oZEG_cPHbI3wh4_NDDcW-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.03;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;endArrow=none;endFill=0;" target="oZEG_cPHbI3wh4_NDDcW-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="oZEG_cPHbI3wh4_NDDcW-18" parent="1" style="fontColor=#0066CC;verticalAlign=top;verticalLabelPosition=bottom;labelPosition=center;align=center;html=1;outlineConnect=0;fillColor=#CCCCCC;strokeColor=#6881B3;gradientColor=none;gradientDirection=north;strokeWidth=2;shape=mxgraph.networks.gamepad;" value="" vertex="1">
+          <mxGeometry height="40" width="60" x="640" y="440" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
